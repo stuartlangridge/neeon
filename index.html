@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<title>neeon</title>
+<meta charset="utf8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style type="text/css">
+canvas {
+    position: absolute;
+    top: 50%;
+    left: 0;
+}
+h1, footer {
+    position: absolute;
+    margin: 0;
+    background: #666;
+    color: hsl(120, 95%, 95%);
+    left: 0;
+    right: 0;
+    height: 40px;
+}
+h1 {
+    padding: 0 0 0 5%;
+    top: 0;
+    font-size: 25px;
+    text-shadow: 0 0 8px hsl(120, 70%, 70%);
+    font-family: sans-serif;
+    font-weight: 100;
+}
+footer {
+    padding: 0;
+    bottom: 0;
+}
+</style>
+</head>
+<body>
+<h1>neeon</h1>
+<canvas></canvas>
+<footer>
+</footer>
+<script>
+var canvas = document.getElementsByTagName('canvas')[0];
+var ctx = canvas.getContext("2d");
+
+// url bar hide on mobile
+/mobi/i.test(navigator.userAgent) && !location.hash && setTimeout(function () {
+  if (!pageYOffset) {
+        canvas.height = screen.height - 80;
+        canvas.style.marginTop = - ((screen.height - 80) / 2) + "px";
+        ctx.fillRect (0, 0, canvas.offsetWidth, canvas.offsetHeight);
+        window.scrollTo(0, 1);
+    }
+}, 1000);
+
+function size() {
+    canvas.height = window.innerHeight - 80;
+    canvas.style.marginTop = - ((window.innerHeight - 80) / 2) + "px";
+    canvas.width = window.innerWidth;
+    ctx.fillRect (0, 0, canvas.offsetWidth, canvas.offsetHeight);
+}
+function gg_hsl2rgb(hsl) {
+    var h = hsl[0],
+       s = hsl[1],
+       l = hsl[2];
+    var v, min, sv, sextant, fract, vsf;
+
+    if (l <= 0.5) v = l * (1 + s);
+    else v = l + s - l * s;
+
+    if (v === 0) return [0, 0, 0];
+    else {
+        min = 2 * l - v;
+        sv = (v - min) / v;
+        h = 6 * h;
+        sextant = Math.floor(h);
+        fract = h - sextant;
+        vsf = v * sv * fract;
+        if (sextant === 0 || sextant === 6) return [v, min + vsf, min];
+        else if (sextant === 1) return [v - vsf, v, min];
+        else if (sextant === 2) return [min, v, min + vsf];
+        else if (sextant === 3) return [min, v - vsf, v];
+        else if (sextant === 4) return [min + vsf, min, v];
+        else return [v, min, v - vsf];
+    }
+}
+function hsl2rgbhex(hsl) {
+    var o = gg_hsl2rgb(hsl);
+    return "#" + (Math.round(o[0] * 255).toString(16)) +
+        (Math.round(o[1] * 255).toString(16)) +
+        (Math.round(o[2] * 255).toString(16));
+}
+
+function begin() {
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect (0, 0, canvas.offsetWidth, canvas.offsetHeight);
+
+    var allpaths = [];
+    var currentpath = [];
+    var useTouch = 'ontouchstart' in window;
+    var downevt = (useTouch ? 'touchstart' : 'mousedown');
+    var upevt = (useTouch ? 'touchend' : 'mouseup');
+    var moveevt = (useTouch ? 'touchmove' : 'mousemove');
+    function getPos(e) {
+        if (useTouch) {
+            return {x: e.changedTouches[0].pageX, y: e.changedTouches[0].pageY - canvas.offsetTop }
+        } else if (e.x != undefined) {
+            return {x: e.x, y: e.y}
+        } else {
+            return {x: e.clientX, y: e.clientY - canvas.offsetTop}
+        }
+    }
+    function drawpath() {
+        for (var overdraw=0; overdraw<5; overdraw++) {
+            ctx.beginPath();
+            ctx.moveTo(currentpath[currentpath.length-2].x, currentpath[currentpath.length-2].y);
+            ctx.lineTo(currentpath[currentpath.length-1].x, currentpath[currentpath.length-1].y);
+            ctx.stroke();
+        }
+    }
+    function move(e) {
+        var pos = getPos(e);
+        currentpath.push(pos);
+        drawpath();
+        e.preventDefault();
+        return false;
+    }
+    function up(e) {
+        var pos = getPos(e);
+        currentpath.push(pos);
+        allpaths.push(currentpath);
+        drawpath();
+        canvas.removeEventListener(moveevt, move, false);
+        canvas.removeEventListener(upevt, up, false);
+        e.preventDefault();
+        return false;
+    }
+    canvas.addEventListener(downevt, function(e) {
+        var hue = Math.random();
+        ctx.strokeStyle = hsl2rgbhex([hue, 0.95, 0.95]);
+        ctx.shadowColor = hsl2rgbhex([hue, 0.5, 0.7]);
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 3;
+        canvas.addEventListener(moveevt, move, false);
+        canvas.addEventListener(upevt, up, false);
+        var pos = getPos(e);
+        currentpath = [pos];
+        e.preventDefault();
+        return false;
+    });
+}
+
+window.onresize = size;
+size();
+
+begin();
+
+</script>
+</body>
+</html>

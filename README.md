@@ -1,0 +1,1 @@
+A sinple finger drawing HTML5 app, which ought to work on mobile devices too. Draws in bright neon lines. Almost certainly only works in Webkit, not because that's required but because it's unfinished. Children like the bright colours when drawing.
